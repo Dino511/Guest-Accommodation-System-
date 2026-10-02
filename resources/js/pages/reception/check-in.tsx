@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import type { FormEvent, ReactNode } from 'react';
 import { useEffect, useMemo } from 'react';
+import ContactNumberInput from '@/components/contact-number-input';
 import CheckInController from '@/actions/App/Http/Controllers/Reception/CheckInController';
 import { DateTimeInput } from '@/components/date-time-input';
 import { FormField } from '@/components/form-field';
@@ -399,9 +400,8 @@ export default function CheckIn(props: Props) {
                                     htmlFor="contact_number"
                                     error={errors.contact_number}
                                 >
-                                    <Input
+                                    <ContactNumberInput
                                         id="contact_number"
-                                        type="tel"
                                         value={form.data.contact_number}
                                         onChange={(event) =>
                                             form.setData(
@@ -580,8 +580,7 @@ export default function CheckIn(props: Props) {
                                                 />
                                             </div>
                                             <div className="grid gap-1">
-                                                <Input
-                                                    type="tel"
+                                                <ContactNumberInput
                                                     value={guest.contact_number}
                                                     onChange={(event) =>
                                                         updateGuest(index, {

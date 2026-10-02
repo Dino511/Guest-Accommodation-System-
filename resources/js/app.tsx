@@ -13,6 +13,8 @@ void createInertiaApp({
     layout: (name) => {
         switch (true) {
             case name === 'welcome':
+            // The guest landing page has its own floating nav, no sidebar.
+            case name === 'dashboard':
                 return null;
             case name.startsWith('auth/'):
                 return AuthLayout;

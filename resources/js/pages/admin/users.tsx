@@ -3,6 +3,7 @@ import { Ban, KeyRound, Mail, UserCheck, UserPlus } from 'lucide-react';
 import { useState } from 'react';
 import UserController from '@/actions/App/Http/Controllers/Admin/UserController';
 import { ConfirmAction } from '@/components/confirm-dialog';
+import ContactNumberInput from '@/components/contact-number-input';
 import { FormField } from '@/components/form-field';
 import { IconButton } from '@/components/icon-button';
 import InputError from '@/components/input-error';
@@ -474,10 +475,9 @@ function NewAccountDialog({
                                 optional
                                 error={errors.contact_number}
                             >
-                                <Input
+                                <ContactNumberInput
                                     id="contact_number"
                                     name="contact_number"
-                                    type="tel"
                                 />
                             </FormField>
                             <div className="grid gap-4 sm:grid-cols-2">

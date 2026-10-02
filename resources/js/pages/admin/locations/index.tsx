@@ -1,5 +1,5 @@
 import { Form, Head, Link } from '@inertiajs/react';
-import { ArrowRight, MapPin, Pencil, Plus, Trash2 } from 'lucide-react';
+import { MapPin, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import LocationController from '@/actions/App/Http/Controllers/Admin/LocationController';
 import { ConfirmDelete } from '@/components/confirm-dialog';
@@ -222,7 +222,6 @@ export default function Locations({ locations, statusGroups }: Props) {
                                             {location.rooms_count > 0
                                                 ? `View ${plural(location.rooms_count, 'room')}`
                                                 : 'Add the first room'}
-                                            <ArrowRight />
                                         </Link>
                                     </Button>
                                 </CardFooter>

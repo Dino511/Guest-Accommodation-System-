@@ -62,28 +62,28 @@ class RoomController extends Controller
 
     public function show(Room $room): Response
     {
-        $room->load(['location', 'inclusions', 'rates.unit', 'maintenanceRecords.recorder', 'photos']);
-
+        // Each part is a closure, so a partial reload (e.g. the inclusions
+        // card asking only for `inclusions`) runs just the queries it needs.
         return Inertia::render('admin/rooms/show', [
-            'room' => [
-                ...$room->summary(),
+            'room' => fn () => [
+                ...$room->loadMissing('location')->summary(),
                 'description' => $room->description,
                 'status_description' => $room->status->description(),
                 'created_at' => $room->created_at?->toDateString(),
             ],
-            'transitions' => array_map(fn (RoomStatus $status) => [
+            'transitions' => fn () => array_map(fn (RoomStatus $status) => [
                 'value' => $status->value,
                 'label' => $status->label(),
                 'description' => $status->description(),
                 'group' => $status->group()->value,
             ], $room->status->manualTransitions()),
-            'photos' => $room->photos->map(fn (RoomPhoto $photo) => $photo->toCard()),
+            'photos' => fn () => $room->photos->map(fn (RoomPhoto $photo) => $photo->toCard()),
             'maxPhotos' => RoomPhoto::MAX_PER_ROOM,
-            'inclusions' => $room->inclusions
+            'inclusions' => fn () => $room->inclusions
                 ->sortBy('item', SORT_NATURAL | SORT_FLAG_CASE)
                 ->values()
                 ->map(fn (RoomInclusion $inclusion) => $inclusion->only(['id', 'item', 'quantity'])),
-            'rates' => $room->rates
+            'rates' => fn () => $room->loadMissing('rates.unit')->rates
                 ->sort(fn (RoomRate $a, RoomRate $b) => [$a->is_extension_rate, (float) $a->price] <=> [$b->is_extension_rate, (float) $b->price])
                 ->values()
                 ->map(fn (RoomRate $rate) => [
@@ -94,7 +94,7 @@ class RoomController extends Controller
                     'unit' => $rate->unit->name,
                     'is_extension_rate' => $rate->is_extension_rate,
                 ]),
-            'maintenance' => $room->maintenanceRecords
+            'maintenance' => fn () => $room->loadMissing('maintenanceRecords.recorder')->maintenanceRecords
                 ->sortBy([['performed_on', 'desc'], ['id', 'desc']])
                 ->values()
                 ->map(fn (MaintenanceRecord $record) => [
@@ -105,12 +105,12 @@ class RoomController extends Controller
                     'done_by' => $record->done_by,
                     'recorded_by' => $record->recorder?->name,
                 ]),
-            'upcomingReservations' => $room->reservations()
+            'upcomingReservations' => fn () => $room->reservations()
                 ->where('status', ReservationStatus::Active)
                 ->where('ends_at', '>=', now())
                 ->count(),
-            'locations' => Location::query()->orderBy('name')->get(['id', 'name']),
-            'rateUnits' => RateUnit::query()->orderBy('id')->get(['id', 'name']),
+            'locations' => fn () => Location::query()->orderBy('name')->get(['id', 'name']),
+            'rateUnits' => fn () => RateUnit::query()->orderBy('id')->get(['id', 'name']),
         ]);
     }
 

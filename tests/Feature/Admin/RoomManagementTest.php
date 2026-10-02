@@ -308,6 +308,28 @@ class RoomManagementTest extends TestCase
         $this->assertModelMissing($inclusion);
     }
 
+    public function test_inclusions_save_in_the_background_without_a_redirect()
+    {
+        $room = Room::factory()->create();
+        $this->actingAs($this->admin);
+
+        $id = $this->postJson(route('admin.rooms.inclusions.store', $room), ['item' => 'Fridge', 'quantity' => 1])
+            ->assertCreated()
+            ->assertJson(['item' => 'Fridge', 'quantity' => 1])
+            ->json('id');
+
+        $this->postJson(route('admin.rooms.inclusions.store', $room), ['item' => 'fridge', 'quantity' => 1])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('item');
+
+        $this->patchJson(route('admin.rooms.inclusions.update', [$room, $id]), ['quantity' => 4])
+            ->assertOk()
+            ->assertJson(['id' => $id, 'quantity' => 4]);
+
+        $this->deleteJson(route('admin.rooms.inclusions.destroy', [$room, $id]))->assertNoContent();
+        $this->assertDatabaseCount('room_inclusions', 0);
+    }
+
     public function test_admin_manages_maintenance_records()
     {
         $room = Room::factory()->create();

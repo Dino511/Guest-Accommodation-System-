@@ -1,5 +1,5 @@
 import { Form } from '@inertiajs/react';
-import { AlertTriangle, ArrowRight } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 import { useState } from 'react';
 import RoomStatusController from '@/actions/App/Http/Controllers/Admin/RoomStatusController';
 import { FormField } from '@/components/form-field';
@@ -85,7 +85,6 @@ export function RoomStatusPanel({
                                     {actionLabel[transition.value] ??
                                         transition.label}
                                 </span>
-                                <ArrowRight className="text-muted-foreground" />
                             </Button>
                         ))}
                     </div>

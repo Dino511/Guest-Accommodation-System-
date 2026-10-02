@@ -32,6 +32,33 @@ class DashboardTest extends TestCase
                 ->missing('stats'));
     }
 
+    public function test_guest_accounts_browse_rooms_locations_and_amenities()
+    {
+        $unit = RateUnit::create(['name' => 'Overnight']);
+        $villa = Location::factory()->create(['name' => 'Villa']);
+        $room = Room::factory()->for($villa)->create(['name' => 'Villa 1', 'pax_capacity' => 4]);
+        $room->rates()->create(['name' => 'Overnight', 'price' => 1500, 'rate_unit_id' => $unit->id]);
+        $room->rates()->create(['name' => 'Extension', 'price' => 100, 'rate_unit_id' => $unit->id, 'is_extension_rate' => true]);
+        $room->inclusions()->create(['item' => 'Fridge', 'quantity' => 1]);
+        Room::factory()->for($villa)->create(['name' => 'Closed', 'status' => RoomStatus::OutOfService]);
+
+        $this->actingAs(User::factory()->create())
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('dashboard')
+                ->has('rooms', 1)
+                ->where('rooms.0.name', 'Villa 1')
+                ->where('rooms.0.inclusions.0.item', 'Fridge')
+                ->has('rooms.0.rates', 1)
+                ->where('rooms.0.rates.0.name', 'Overnight')
+                ->has('locations', 1)
+                ->where('locations.0.rooms_count', 1)
+                ->where('locations.0.from_unit', 'Overnight')
+                ->has('checkInTime')
+                ->has('checkOutTime'));
+    }
+
     public function test_reception_sees_the_front_desk_day()
     {
         Room::factory()->create(['name' => 'Villa 1']);

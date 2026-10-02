@@ -1,4 +1,5 @@
 import { Form, Head } from '@inertiajs/react';
+import ContactNumberInput from '@/components/contact-number-input';
 import InputError from '@/components/input-error';
 import PasswordInput from '@/components/password-input';
 import TextLink from '@/components/text-link';
@@ -60,17 +61,16 @@ export default function Register({ passwordRules }: Props) {
                                 <Label htmlFor="contact_number">
                                     Contact number
                                 </Label>
-                                <Input
+                                <ContactNumberInput
                                     id="contact_number"
-                                    type="tel"
                                     required
                                     autoComplete="tel"
                                     name="contact_number"
-                                    placeholder="09XX XXX XXXX"
                                 />
                                 <p className="text-xs text-muted-foreground">
-                                    Reception calls this number one hour before
-                                    your check-out.
+                                    Philippine mobile number (09XXXXXXXXX or
+                                    +639XXXXXXXXX). Reception calls this number
+                                    one hour before your check-out.
                                 </p>
                                 <InputError message={errors.contact_number} />
                             </div>

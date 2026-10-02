@@ -9,6 +9,7 @@ import {
 import type { FormEvent, ReactNode } from 'react';
 import { useRef, useState } from 'react';
 import ReservationController from '@/actions/App/Http/Controllers/Reception/ReservationController';
+import ContactNumberInput from '@/components/contact-number-input';
 import { CountInput } from '@/components/count-input';
 import { DateTimeInput } from '@/components/date-time-input';
 import { FormField } from '@/components/form-field';
@@ -828,9 +829,8 @@ export default function NewReservation({
                                 htmlFor="contact_number"
                                 error={errors.contact_number}
                             >
-                                <Input
+                                <ContactNumberInput
                                     id="contact_number"
-                                    type="tel"
                                     value={form.data.contact_number}
                                     onChange={(event) =>
                                         form.setData(
@@ -838,7 +838,6 @@ export default function NewReservation({
                                             event.target.value,
                                         )
                                     }
-                                    placeholder="0917 123 4567"
                                     required
                                 />
                             </FormField>

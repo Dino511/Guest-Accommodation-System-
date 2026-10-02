@@ -38,6 +38,42 @@ class ActivityLogTest extends TestCase
         $this->assertSame(['price' => ['600.00', '750.00']], $entry->changes);
     }
 
+    public function test_admin_can_download_the_filtered_log_as_a_pdf()
+    {
+        $admin = User::factory()->admin()->create(['name' => 'Ana']);
+        ActivityLog::query()->delete();
+        ActivityLog::create(['user_id' => $admin->id, 'action' => 'updated', 'subject_type' => 'Room', 'description' => 'Changed room A-104', 'changes' => ['status' => ['available', 'under_maintenance']]]);
+        ActivityLog::create(['user_id' => $admin->id, 'action' => 'created', 'subject_type' => 'Location', 'description' => 'Added location Barracks']);
+
+        $response = $this->actingAs($admin)->get(route('admin.activity.pdf', ['type' => 'Room']));
+
+        $response->assertOk()->assertHeader('content-type', 'application/pdf');
+        $this->assertStringStartsWith('%PDF', $response->getContent());
+        $this->assertStringContainsString('attachment', (string) $response->headers->get('content-disposition'));
+    }
+
+    public function test_the_pdf_shows_old_and_new_values()
+    {
+        $admin = User::factory()->admin()->create(['name' => 'Ana']);
+        ActivityLog::query()->delete();
+        ActivityLog::create(['user_id' => $admin->id, 'action' => 'updated', 'subject_type' => 'Room', 'description' => 'Changed room A-104', 'changes' => ['status' => ['available', 'under_maintenance']]]);
+
+        $this->view('admin.activity-pdf', [
+            'entries' => ActivityLog::query()->with('user')->get(),
+            'total' => 1,
+            'types' => ['Room' => 'Rooms'],
+            'filters' => [],
+            'printedBy' => 'Ana',
+        ])->assertSee('Changed room A-104')->assertSee('Status: available → under maintenance');
+    }
+
+    public function test_only_admins_can_download_the_pdf()
+    {
+        $this->actingAs(User::factory()->reception()->create())
+            ->get(route('admin.activity.pdf'))
+            ->assertForbidden();
+    }
+
     public function test_room_status_changes_are_described_in_words()
     {
         $room = Room::factory()->create(['name' => 'A-104']);

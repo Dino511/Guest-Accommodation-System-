@@ -1,5 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
-import { ArrowLeft, Copy, Pencil, Trash2 } from 'lucide-react';
+import { Copy, Pencil, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import RoomController from '@/actions/App/Http/Controllers/Admin/RoomController';
 import { RoomCopyDialog } from '@/components/admin/room-copy-dialog';
@@ -70,7 +70,6 @@ export default function RoomShow({
                         href={roomsIndex()}
                         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
                     >
-                        <ArrowLeft className="size-4" />
                         All rooms
                     </Link>
                     <PageHeader

@@ -124,6 +124,7 @@ npm install
 # "Shared Memory Provider: Timeout error [258]" pages. Turn it off once:
 sqlcmd -S "localhost\SQLEXPRESS" -E -C -Q "ALTER DATABASE guest_accommodation SET AUTO_CLOSE OFF"
 php artisan migrate
+php artisan storage:link                  # once per machine; without it room photos upload but do not display
 php artisan db:seed                       # rate units, default settings, first Admin
 php artisan db:seed --class=DemoSeeder    # OPTIONAL sample data, only into an EMPTY database
 

@@ -7,6 +7,7 @@ use App\Enums\VerificationResult;
 use App\Models\IdType;
 use App\Models\Reservation;
 use App\Models\Room;
+use App\Rules\PhilippineMobileNumber;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -46,7 +47,7 @@ class CheckInRequest extends FormRequest
             'guests' => [$unlessPassed, 'required', 'array', 'min:1', 'max:500'],
             'guests.*.name' => [$unlessPassed, 'required', 'string', 'max:255'],
             'guests.*.address' => [$unlessPassed, 'required', 'string', 'max:255'],
-            'guests.*.contact_number' => [$unlessPassed, 'nullable', 'string', 'max:30', 'regex:/^[0-9+()\-\s]{7,30}$/'],
+            'guests.*.contact_number' => [$unlessPassed, 'nullable', 'string', 'max:30', new PhilippineMobileNumber],
             'guests.*.room_id' => [$unlessPassed, 'required', 'integer', Rule::in($this->bookedRoomIds())],
 
             'id_type_id' => [$unlessPassed, 'required', 'integer', Rule::exists(IdType::class, 'id')->where('is_active', true)],

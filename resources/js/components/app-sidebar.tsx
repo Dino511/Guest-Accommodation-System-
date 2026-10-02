@@ -6,7 +6,6 @@ import {
     CalendarDays,
     HandCoins,
     History,
-    LayoutGrid,
     MapPin,
     Settings2,
     Users,
@@ -37,13 +36,9 @@ import type { NavItem, Role } from '@/types';
 
 type NavSection = { label: string; roles: Role[]; items: NavItem[] };
 
+// The logo at the top opens the dashboard, so it has no menu item.
 // Guest screens come in a later phase; guests see the dashboard only.
 const sections: NavSection[] = [
-    {
-        label: 'Overview',
-        roles: ['guest', 'reception', 'admin'],
-        items: [{ title: 'Dashboard', href: dashboard(), icon: LayoutGrid }],
-    },
     {
         label: 'Front desk',
         roles: ['reception', 'admin'],
@@ -68,13 +63,13 @@ const sections: NavSection[] = [
         label: 'Setup',
         roles: ['admin'],
         items: [
+            { title: 'Locations', href: locationsIndex(), icon: MapPin },
             {
                 title: 'Rooms',
                 href: roomsIndex(),
                 icon: BedDouble,
                 matchChildren: true,
             },
-            { title: 'Locations', href: locationsIndex(), icon: MapPin },
             { title: 'System settings', href: settingsEdit(), icon: Settings2 },
         ],
     },

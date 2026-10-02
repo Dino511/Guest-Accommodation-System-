@@ -1,5 +1,6 @@
 import { Form, Head, usePage } from '@inertiajs/react';
 import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
+import ContactNumberInput from '@/components/contact-number-input';
 import DeleteUser from '@/components/delete-user';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
@@ -82,9 +83,8 @@ export default function Profile() {
                                     Contact number
                                 </Label>
 
-                                <Input
+                                <ContactNumberInput
                                     id="contact_number"
-                                    type="tel"
                                     className="mt-1 block w-full"
                                     defaultValue={
                                         auth.user.contact_number ?? ''
@@ -92,7 +92,6 @@ export default function Profile() {
                                     name="contact_number"
                                     required={auth.user.role === 'guest'}
                                     autoComplete="tel"
-                                    placeholder="09XX XXX XXXX"
                                 />
 
                                 <InputError

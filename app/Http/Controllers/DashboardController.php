@@ -16,6 +16,9 @@ use App\Models\Refund;
 use App\Models\Reservation;
 use App\Models\ReservationRoom;
 use App\Models\Room;
+use App\Models\RoomInclusion;
+use App\Models\RoomPhoto;
+use App\Models\RoomRate;
 use App\Models\Setting;
 use App\Models\Stay;
 use App\Models\StayRoom;
@@ -234,7 +237,63 @@ class DashboardController extends Controller
                 'payment_status' => $reservation->paymentStatus()->value,
             ]);
 
-        return ['reservations' => $reservations];
+        // What a guest can browse: rooms that can take guests (not under
+        // maintenance or out of service), with photos, amenities and the
+        // booking prices. Live occupancy is not shown.
+        $rooms = Room::query()
+            ->with(['location:id,name,description', 'photos', 'inclusions', 'rates.unit'])
+            ->get()
+            ->filter(fn (Room $room) => $room->status->group() !== RoomStatusGroup::Unavailable)
+            ->sortBy(fn (Room $room) => $room->location->name."\0".$room->name, SORT_NATURAL | SORT_FLAG_CASE)
+            ->values();
+
+        $standardRates = fn (Room $room) => $room->rates
+            ->where('is_extension_rate', false)
+            ->sortBy(fn (RoomRate $rate) => (float) $rate->price)
+            ->values();
+
+        $cover = fn (Room $room) => ($room->photos->firstWhere('is_cover', true) ?? $room->photos->first())?->url();
+
+        return [
+            'reservations' => $reservations,
+            'rooms' => $rooms->map(fn (Room $room) => [
+                'id' => $room->id,
+                'name' => $room->name,
+                'location_id' => $room->location_id,
+                'location' => $room->location->name,
+                'description' => $room->description,
+                'pax_capacity' => $room->pax_capacity,
+                'cover_url' => $cover($room),
+                'photos' => $room->photos->map(fn (RoomPhoto $photo) => ['url' => $photo->url(), 'caption' => $photo->caption])->values(),
+                'inclusions' => $room->inclusions
+                    ->sortBy('item', SORT_NATURAL | SORT_FLAG_CASE)
+                    ->values()
+                    ->map(fn (RoomInclusion $inclusion) => $inclusion->only(['item', 'quantity'])),
+                'rates' => $standardRates($room)->map(fn (RoomRate $rate) => [
+                    'name' => $rate->name,
+                    'price' => $rate->price,
+                    'unit' => $rate->unit->name,
+                ]),
+            ]),
+            // Only locations that have a room a guest can stay in.
+            'locations' => $rooms->pluck('location')->unique('id')->values()->map(function (Location $location) use ($rooms, $standardRates, $cover) {
+                $here = $rooms->where('location_id', $location->id);
+                $cheapest = $here->flatMap($standardRates)->sortBy(fn (RoomRate $rate) => (float) $rate->price)->first();
+
+                return [
+                    'id' => $location->id,
+                    'name' => $location->name,
+                    'description' => $location->description,
+                    'rooms_count' => $here->count(),
+                    'max_pax' => (int) $here->max('pax_capacity'),
+                    'from_price' => $cheapest?->price,
+                    'from_unit' => $cheapest?->unit->name,
+                    'cover_url' => $here->map($cover)->filter()->first(),
+                ];
+            }),
+            'checkInTime' => Setting::query()->whereKey('standard_check_in_time')->value('value'),
+            'checkOutTime' => Setting::query()->whereKey('standard_check_out_time')->value('value'),
+        ];
     }
 
     /**

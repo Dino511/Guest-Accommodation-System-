@@ -1,6 +1,6 @@
 import { Link } from '@inertiajs/react';
 import type { InertiaLinkProps } from '@inertiajs/react';
-import { ArrowRight, Check } from 'lucide-react';
+import { Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -175,10 +175,7 @@ export function SetupChecklist({ checklist }: { checklist: Checklist }) {
                                     }
                                     className="shrink-0"
                                 >
-                                    <Link href={step.href}>
-                                        {step.action}
-                                        {index === next && <ArrowRight />}
-                                    </Link>
+                                    <Link href={step.href}>{step.action}</Link>
                                 </Button>
                             )}
                         </li>

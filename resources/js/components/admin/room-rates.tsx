@@ -1,10 +1,19 @@
 import { Form, Link } from '@inertiajs/react';
-import { Clock, Pencil, Plus, Tag, Trash2 } from 'lucide-react';
+import {
+    AlertTriangle,
+    ChevronDown,
+    Clock,
+    Pencil,
+    Plus,
+    Tag,
+    Trash2,
+} from 'lucide-react';
 import { useState } from 'react';
 import RoomRateController from '@/actions/App/Http/Controllers/Admin/RoomRateController';
 import { ConfirmDelete } from '@/components/confirm-dialog';
 import { EmptyState } from '@/components/empty-state';
 import { IconButton } from '@/components/icon-button';
+import InputError from '@/components/input-error';
 import { FormField } from '@/components/form-field';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -15,7 +24,6 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
     Dialog,
     DialogClose,
@@ -25,8 +33,13 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
     Select,
     SelectContent,
@@ -61,6 +74,7 @@ export function RoomRates({
     const [dialog, setDialog] = useState<DialogState | null>(null);
     const [deleting, setDeleting] = useState<RoomRate | null>(null);
     const hasExtensionRate = rates.some((rate) => rate.is_extension_rate);
+    const hasStandardRate = rates.some((rate) => !rate.is_extension_rate);
 
     return (
         <Card>
@@ -170,6 +184,38 @@ export function RoomRates({
                                 ))}
                             </TableBody>
                         </Table>
+                        {!hasStandardRate && (
+                            <div
+                                role="alert"
+                                className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm"
+                            >
+                                <span className="flex items-start gap-2">
+                                    <AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-600" />
+                                    <span>
+                                        <span className="font-medium">
+                                            This room has no booking price.
+                                        </span>{' '}
+                                        Every rate here is an extension rate, so
+                                        the room shows "No price yet" and cannot
+                                        be booked. Edit a rate and set its type
+                                        to Standard, or add one.
+                                    </span>
+                                </span>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() =>
+                                        setDialog({
+                                            rate: null,
+                                            extension: false,
+                                        })
+                                    }
+                                >
+                                    <Plus />
+                                    Add standard rate
+                                </Button>
+                            </div>
+                        )}
                         {!hasExtensionRate && (
                             <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg bg-muted px-4 py-3 text-sm">
                                 <span className="text-muted-foreground">
@@ -199,6 +245,7 @@ export function RoomRates({
                 roomId={roomId}
                 state={dialog}
                 rateUnits={rateUnits}
+                existingNames={rates.map((rate) => rate.name)}
                 onOpenChange={(open) => !open && setDialog(null)}
             />
 
@@ -218,15 +265,104 @@ export function RoomRates({
     );
 }
 
+/** The two kinds of rate; the value is what `is_extension_rate` is sent as. */
+const rateTypes = [
+    {
+        value: '0',
+        label: 'Standard',
+        description:
+            'A booking price. Shown as the room price and offered when booking.',
+    },
+    {
+        value: '1',
+        label: 'Extension',
+        description:
+            'Charged only when a guest extends their stay. Not a booking price.',
+    },
+];
+
+/** Common rate names offered in the Name list; any other name can be typed. */
+const RATE_NAMES = [
+    'Standard Rate',
+    'Overnight',
+    'Day Tour',
+    'Weekend Rate',
+    'Holiday Rate',
+    'Peak Season Rate',
+    'Off-Peak Rate',
+    'Corporate Plan',
+    'Long Stay',
+    'Early Check-in',
+    'Late Checkout',
+    'Extension',
+];
+
+/**
+ * The rate's name: a text box the Admin can type in, with a list of common
+ * names (and the names already used on this room) to pick from.
+ */
+function RateNameInput({
+    defaultValue,
+    names,
+}: {
+    defaultValue: string;
+    names: string[];
+}) {
+    const [value, setValue] = useState(defaultValue);
+    const options = [...new Set([...RATE_NAMES, ...names])];
+
+    return (
+        <div className="flex gap-2">
+            <Input
+                id="rate-name"
+                name="name"
+                value={value}
+                onChange={(event) => setValue(event.target.value)}
+                placeholder="Type a name or choose one"
+                maxLength={255}
+                required
+                autoFocus
+            />
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        aria-label="Choose a rate name"
+                    >
+                        <ChevronDown />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                    align="end"
+                    className="max-h-64 overflow-y-auto"
+                >
+                    {options.map((option) => (
+                        <DropdownMenuItem
+                            key={option}
+                            onSelect={() => setValue(option)}
+                        >
+                            {option}
+                        </DropdownMenuItem>
+                    ))}
+                </DropdownMenuContent>
+            </DropdownMenu>
+        </div>
+    );
+}
+
 function RateDialog({
     roomId,
     state,
     rateUnits,
+    existingNames,
     onOpenChange,
 }: {
     roomId: number;
     state: DialogState | null;
     rateUnits: RateUnitOption[];
+    existingNames: string[];
     onOpenChange: (open: boolean) => void;
 }) {
     const rate = state?.rate ?? null;
@@ -272,16 +408,12 @@ function RateDialog({
                                 htmlFor="rate-name"
                                 error={errors.name}
                             >
-                                <Input
-                                    id="rate-name"
-                                    name="name"
+                                <RateNameInput
                                     defaultValue={
                                         rate?.name ??
                                         (state?.extension ? 'Extension' : '')
                                     }
-                                    placeholder="e.g. Overnight stay"
-                                    required
-                                    autoFocus
+                                    names={existingNames}
                                 />
                             </FormField>
 
@@ -351,27 +483,43 @@ function RateDialog({
                                 </FormField>
                             </div>
 
-                            <div className="flex items-start gap-3 rounded-lg border p-3">
-                                <Checkbox
-                                    id="rate-extension"
-                                    name="is_extension_rate"
-                                    value="1"
-                                    defaultChecked={
-                                        rate?.is_extension_rate ??
-                                        state?.extension
-                                    }
-                                    className="mt-0.5"
-                                />
-                                <div className="grid gap-1">
-                                    <Label htmlFor="rate-extension">
-                                        Extension rate
-                                    </Label>
-                                    <p className="text-xs text-muted-foreground">
-                                        Charged when a guest extends their stay,
-                                        not offered when booking.
-                                    </p>
+                            <fieldset className="grid gap-2">
+                                <legend className="mb-2 text-sm font-medium">
+                                    Type
+                                </legend>
+                                <div className="grid gap-2 sm:grid-cols-2">
+                                    {rateTypes.map((type) => (
+                                        <label
+                                            key={type.value}
+                                            className="flex cursor-pointer items-start gap-3 rounded-lg border p-3 has-checked:border-primary has-checked:bg-primary/5"
+                                        >
+                                            <input
+                                                type="radio"
+                                                name="is_extension_rate"
+                                                value={type.value}
+                                                defaultChecked={
+                                                    (rate?.is_extension_rate ??
+                                                        state?.extension ??
+                                                        false) ===
+                                                    (type.value === '1')
+                                                }
+                                                className="mt-0.5 size-4 accent-primary"
+                                            />
+                                            <span className="grid gap-1">
+                                                <span className="text-sm leading-none font-medium">
+                                                    {type.label}
+                                                </span>
+                                                <span className="text-xs text-muted-foreground">
+                                                    {type.description}
+                                                </span>
+                                            </span>
+                                        </label>
+                                    ))}
                                 </div>
-                            </div>
+                                <InputError
+                                    message={errors.is_extension_rate}
+                                />
+                            </fieldset>
 
                             <DialogFooter>
                                 <DialogClose asChild>

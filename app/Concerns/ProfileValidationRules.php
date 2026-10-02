@@ -3,6 +3,7 @@
 namespace App\Concerns;
 
 use App\Models\User;
+use App\Rules\PhilippineMobileNumber;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Validation\Rule;
 
@@ -38,7 +39,7 @@ trait ProfileValidationRules
      */
     protected function contactNumberRules(): array
     {
-        return ['required', 'string', 'max:30', 'regex:/^[0-9+()\-\s]{7,30}$/'];
+        return ['required', 'string', 'max:30', new PhilippineMobileNumber];
     }
 
     /**

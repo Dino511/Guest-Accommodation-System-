@@ -112,6 +112,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::patch('users/{user}/activate', [UserController::class, 'activate'])->name('users.activate');
 
         Route::get('activity', [ActivityLogController::class, 'index'])->name('activity.index');
+        Route::get('activity/pdf', [ActivityLogController::class, 'pdf'])->name('activity.pdf');
     });
 });
 

@@ -1,6 +1,5 @@
 import { Head, Link, router, usePoll } from '@inertiajs/react';
 import {
-    ArrowRight,
     CheckCircle2,
     ClipboardCheck,
     DoorOpen,
@@ -464,7 +463,6 @@ export default function FrontDesk({
                                         {plural(stats.openRefunds, 'refund')} to
                                         process
                                     </span>
-                                    <ArrowRight className="size-4 text-muted-foreground" />
                                 </Link>
                             )}
                         </CardContent>
@@ -928,7 +926,6 @@ function RoomDialog({
                                                     transition.value
                                                 ] ?? transition.label}
                                             </span>
-                                            <ArrowRight className="text-muted-foreground" />
                                         </Button>
                                     ))}
                                 </div>

@@ -1,13 +1,5 @@
 import { Form, Head, Link } from '@inertiajs/react';
-import {
-    ArrowRight,
-    Ban,
-    IdCard,
-    ImageIcon,
-    LogIn,
-    Plus,
-    UserX,
-} from 'lucide-react';
+import { Ban, IdCard, ImageIcon, LogIn, Plus, UserX } from 'lucide-react';
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import CheckInController from '@/actions/App/Http/Controllers/Reception/CheckInController';
@@ -675,10 +667,7 @@ function StayCard({ stay }: { stay: Stay }) {
                     </CardDescription>
                 </div>
                 <Button size="sm" asChild>
-                    <Link href={staysShow(stay.stay_id)}>
-                        Open stay
-                        <ArrowRight />
-                    </Link>
+                    <Link href={staysShow(stay.stay_id)}>Open stay</Link>
                 </Button>
             </CardHeader>
             <CardContent className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">

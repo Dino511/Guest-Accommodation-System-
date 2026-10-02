@@ -1,5 +1,11 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { ChevronLeft, ChevronRight, History, Search } from 'lucide-react';
+import {
+    ChevronLeft,
+    ChevronRight,
+    FileDown,
+    History,
+    Search,
+} from 'lucide-react';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { EmptyState } from '@/components/empty-state';
@@ -16,7 +22,10 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { index as activityIndex } from '@/routes/admin/activity';
+import {
+    index as activityIndex,
+    pdf as activityPdf,
+} from '@/routes/admin/activity';
 
 type Entry = {
     id: number;
@@ -125,6 +134,29 @@ export default function ActivityLog({ entries, filters, users, types }: Props) {
                 <PageHeader
                     title="Activity log"
                     description="Every change made in the admin screens: who did it, when, and what changed."
+                    actions={
+                        entries.total > 0 && (
+                            <Button variant="outline" asChild>
+                                {/* A plain link: the PDF is a file download,
+                                    not an Inertia page. It holds every entry
+                                    that matches the filters. */}
+                                <a
+                                    href={activityPdf.url({
+                                        query: Object.fromEntries(
+                                            Object.entries(filters).filter(
+                                                ([, value]) =>
+                                                    value !== null &&
+                                                    value !== '',
+                                            ),
+                                        ),
+                                    })}
+                                >
+                                    <FileDown />
+                                    Download PDF
+                                </a>
+                            </Button>
+                        )
+                    }
                 />
 
                 <div className="flex flex-wrap items-end gap-2">
