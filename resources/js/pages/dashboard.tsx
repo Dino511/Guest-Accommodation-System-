@@ -138,52 +138,6 @@ function seeded(seed: number): () => number {
     };
 }
 
-/** One closed, organic depth contour for the sea chart. */
-function contour(
-    cx: number,
-    cy: number,
-    radius: number,
-    wobble: number,
-    seed: number,
-): string {
-    const count = 14;
-    const points = Array.from({ length: count }, (_, index) => {
-        const angle = (index / count) * Math.PI * 2;
-        const r =
-            radius +
-            Math.sin(angle * 3 + seed) * wobble +
-            Math.cos(angle * 5 + seed * 2) * wobble * 0.5;
-
-        return [cx + Math.cos(angle) * r * 1.35, cy + Math.sin(angle) * r];
-    });
-    const at = (index: number) => points[(index + count) % count];
-    const n = (value: number) => value.toFixed(1);
-
-    let path = `M${n(points[0][0])},${n(points[0][1])}`;
-
-    for (let index = 0; index < count; index++) {
-        const [p0, p1, p2, p3] = [
-            at(index - 1),
-            at(index),
-            at(index + 1),
-            at(index + 2),
-        ];
-
-        path += ` C${n(p1[0] + (p2[0] - p0[0]) / 6)},${n(p1[1] + (p2[1] - p0[1]) / 6)} ${n(p2[0] - (p3[0] - p1[0]) / 6)},${n(p2[1] - (p3[1] - p1[1]) / 6)} ${n(p2[0])},${n(p2[1])}`;
-    }
-
-    return `${path}Z`;
-}
-
-const contours = [
-    ...Array.from({ length: 11 }, (_, index) =>
-        contour(1060, 330, (index + 1) * 34, 10 + (index + 1) * 2.2, 1.3),
-    ),
-    ...Array.from({ length: 7 }, (_, index) =>
-        contour(180, 900, (index + 1) * 40, 12 + (index + 1) * 2, 4.1),
-    ),
-];
-
 /** Lit windows for the skyline, in columns at the given x positions. */
 function windows(xs: number[], top: number, bottom: number, seed: number) {
     const random = seeded(seed);
@@ -447,6 +401,158 @@ function Arrow({ size = 14 }: { size?: number }) {
     return <ArrowRight size={size} strokeWidth={2.6} />;
 }
 
+// Stand-in renders; swap the files in public/images/journey to change them.
+const walkScenes = [
+    {
+        id: 'top',
+        image: '/images/journey/lobby.jpg',
+        title: 'Arrive',
+        text: '',
+    },
+    {
+        id: 'walk-hall',
+        image: '/images/journey/corridor.jpg',
+        title: 'Down the hall',
+        text: 'Every door is a place to stay. Choose where you drop anchor.',
+    },
+    {
+        id: 'walk-room',
+        image: '/images/journey/room.jpg',
+        title: 'Your room',
+        text: 'Fresh linens, a desk, and room to unpack. Find the one that fits your crew.',
+    },
+    {
+        id: 'walk-view',
+        image: '/images/journey/balcony.jpg',
+        title: 'The view',
+        text: 'Slide the doors open. Everything that comes with your stay is just below.',
+    },
+];
+
+const clamp = (value: number) => Math.min(Math.max(value, 0), 1);
+
+/**
+ * The first-person walk behind the whole page: lobby, corridor, room,
+ * balcony. Each scene fades in as its chapter scrolls up, and is slowly
+ * walked into until the next one takes over.
+ */
+function Backdrop() {
+    const images = useRef<(HTMLImageElement | null)[]>([]);
+    const bar = useRef<HTMLSpanElement>(null);
+    const [active, setActive] = useState(0);
+
+    useEffect(() => {
+        const still = reducedMotion();
+        let frame = 0;
+
+        const paint = () => {
+            frame = 0;
+
+            const y = window.scrollY;
+            const view = window.innerHeight;
+            const end = document.documentElement.scrollHeight - view;
+
+            // A scene starts when its chapter reaches the bottom of the screen.
+            const starts = walkScenes.map((scene, index) => {
+                const node = index > 0 && document.getElementById(scene.id);
+
+                return node ? node.getBoundingClientRect().top + y - view : 0;
+            });
+            let current = 0;
+
+            images.current.forEach((image, index) => {
+                if (!image) {
+                    return;
+                }
+
+                const into = y - starts[index];
+                const length = (starts[index + 1] ?? end) - starts[index];
+
+                image.style.opacity =
+                    index === 0 ? '1' : String(clamp(into / (view * 0.7)));
+                image.style.transform = still
+                    ? ''
+                    : `scale(${1 + clamp(into / Math.max(length, 1)) * 0.14})`;
+
+                if (into >= view * 0.45) {
+                    current = index;
+                }
+            });
+
+            if (bar.current) {
+                bar.current.style.transform = `scaleX(${end > 0 ? clamp(y / end) : 0})`;
+            }
+
+            setActive(current);
+        };
+
+        const queue = () => {
+            frame ||= requestAnimationFrame(paint);
+        };
+
+        paint();
+        window.addEventListener('scroll', queue, { passive: true });
+        window.addEventListener('resize', queue);
+
+        return () => {
+            cancelAnimationFrame(frame);
+            window.removeEventListener('scroll', queue);
+            window.removeEventListener('resize', queue);
+        };
+    }, []);
+
+    return (
+        <>
+            <div className="scene" aria-hidden="true">
+                {walkScenes.map((scene, index) => (
+                    <img
+                        key={scene.id}
+                        ref={(node) => {
+                            images.current[index] = node;
+                        }}
+                        src={scene.image}
+                        alt=""
+                    />
+                ))}
+            </div>
+            <span className="scene__bar" aria-hidden="true">
+                <span ref={bar} />
+            </span>
+            <nav className="rail" aria-label="Walk-through">
+                {walkScenes.map((scene, index) => (
+                    <a
+                        key={scene.id}
+                        href={`#${scene.id}`}
+                        aria-current={index === active ? 'step' : undefined}
+                    >
+                        <span>{scene.title}</span>
+                        <i />
+                    </a>
+                ))}
+            </nav>
+        </>
+    );
+}
+
+/** A full-screen pause on a scene before its part of the page. */
+function Chapter({ index }: { index: number }) {
+    const scene = walkScenes[index];
+
+    return (
+        <div className="chapter" id={scene.id}>
+            <span className="mono" data-reveal>
+                {pad(index + 1)} / {pad(walkScenes.length)}
+            </span>
+            <h2 data-reveal style={{ '--d': '.08s' } as CSSProperties}>
+                {scene.title}
+            </h2>
+            <p data-reveal style={{ '--d': '.16s' } as CSSProperties}>
+                {scene.text}
+            </p>
+        </div>
+    );
+}
+
 export default function Dashboard({
     reservations,
     rooms,
@@ -456,8 +562,6 @@ export default function Dashboard({
 }: Props) {
     const { auth } = usePage().props;
     const root = useRef<HTMLDivElement>(null);
-    const glow = useRef<HTMLDivElement>(null);
-    const stack = useRef<HTMLDivElement>(null);
     const filterTrack = useRef<HTMLDivElement>(null);
     const filterPill = useRef<HTMLSpanElement>(null);
 
@@ -472,7 +576,6 @@ export default function Dashboard({
     const checkIn = checkInTime ? formatClock(checkInTime) : null;
     const checkOut = checkOutTime ? formatClock(checkOutTime) : null;
     const cabin = (room: GuestRoom) => pad(rooms.indexOf(room) + 1);
-    const featured = rooms.find((room) => room.cover_url) ?? rooms[0];
 
     // Every amenity across the rooms, most common first.
     const amenities: Amenity[] = [
@@ -617,30 +720,6 @@ export default function Dashboard({
     const matches = (room: GuestRoom, id: number | null | undefined) =>
         id === null || id === undefined || room.location_id === id;
 
-    // The lantern glow and the photo stack follow the pointer.
-    const heroMove = (event: PointerEvent<HTMLElement>) => {
-        if (reducedMotion()) {
-            return;
-        }
-
-        const box = event.currentTarget.getBoundingClientRect();
-        const x = (event.clientX - box.left) / box.width;
-        const y = (event.clientY - box.top) / box.height;
-
-        glow.current?.style.setProperty('--gx', `${x * 100}%`);
-        glow.current?.style.setProperty('--gy', `${y * 100}%`);
-
-        if (stack.current) {
-            stack.current.style.transform = `rotateY(${(x - 0.5) * 14}deg) rotateX(${(0.5 - y) * 10}deg)`;
-        }
-    };
-
-    const heroLeave = () => {
-        if (stack.current) {
-            stack.current.style.transform = '';
-        }
-    };
-
     return (
         <>
             <Head title="Welcome">
@@ -658,87 +737,9 @@ export default function Dashboard({
 
             <div className="mm" ref={root}>
                 {/* ================= Hero ================= */}
-                <header
-                    className="hero"
-                    id="top"
-                    onPointerMove={heroMove}
-                    onPointerLeave={heroLeave}
-                >
-                    <div className="hero__bg" aria-hidden="true">
-                        <svg
-                            className="chartgrid"
-                            width="100%"
-                            height="100%"
-                            preserveAspectRatio="none"
-                        >
-                            <defs>
-                                <pattern
-                                    id="mm-grid"
-                                    width="160"
-                                    height="160"
-                                    patternUnits="userSpaceOnUse"
-                                >
-                                    <path
-                                        d="M160 0H0V160"
-                                        fill="none"
-                                        stroke="rgba(255,255,255,.05)"
-                                    />
-                                </pattern>
-                            </defs>
-                            <rect
-                                width="100%"
-                                height="100%"
-                                fill="url(#mm-grid)"
-                            />
-                            <text x="24" y="150">
-                                14°00′N
-                            </text>
-                            <text x="24" y="470">
-                                13°45′N
-                            </text>
-                            <text x="24" y="790">
-                                13°30′N
-                            </text>
-                            <text x="330" y="24">
-                                120°45′E
-                            </text>
-                            <text x="650" y="24">
-                                121°00′E
-                            </text>
-                            <text x="970" y="24">
-                                121°15′E
-                            </text>
-                        </svg>
-                        <svg
-                            className="contours"
-                            viewBox="0 0 1360 1100"
-                            preserveAspectRatio="xMidYMid slice"
-                        >
-                            <g>
-                                {contours.map((path) => (
-                                    <path key={path} d={path} />
-                                ))}
-                            </g>
-                        </svg>
-                        <div className="beam" />
-                        <div className="glow" ref={glow} />
-                        <svg className="grain" width="100%" height="100%">
-                            <filter id="mm-noise">
-                                <feTurbulence
-                                    type="fractalNoise"
-                                    baseFrequency=".85"
-                                    numOctaves="2"
-                                    stitchTiles="stitch"
-                                />
-                            </filter>
-                            <rect
-                                width="100%"
-                                height="100%"
-                                filter="url(#mm-noise)"
-                            />
-                        </svg>
-                    </div>
+                <Backdrop />
 
+                <header className="hero" id="top">
                     <div className="wrap">
                         <nav className="nav" aria-label="Main">
                             <a className="brand" href="#top">
@@ -773,8 +774,8 @@ export default function Dashboard({
                                                 .toUpperCase()}
                                         </span>
                                         <span>
+                                            <small>Welcome,</small>
                                             <b>{auth.user.name}</b>
-                                            <small>Guest</small>
                                         </span>
                                     </button>
                                 </DropdownMenuTrigger>
@@ -857,130 +858,6 @@ export default function Dashboard({
                                     </a>
                                 </div>
                             </div>
-
-                            {featured && (
-                                <div className="stack">
-                                    <div className="stack__inner" ref={stack}>
-                                        <div className="card-back">
-                                            <Skyline
-                                                label={
-                                                    (
-                                                        locations.find(
-                                                            (location) =>
-                                                                location.id !==
-                                                                featured.location_id,
-                                                        ) ?? locations[0]
-                                                    )?.name
-                                                }
-                                                sub="Harbor lights"
-                                            />
-                                        </div>
-                                        <div className="card-front">
-                                            <div className="card-front__img">
-                                                <span className="card-front__tag mono">
-                                                    Featured ·{' '}
-                                                    {featured.location}
-                                                </span>
-                                                <Photo
-                                                    url={featured.cover_url}
-                                                    alt={featured.name}
-                                                >
-                                                    <Porthole
-                                                        number={cabin(featured)}
-                                                    />
-                                                </Photo>
-                                            </div>
-                                            <div className="ticket">
-                                                <span className="notch l" />
-                                                <span className="notch r" />
-                                                <div className="ticket__row">
-                                                    <div>
-                                                        <span className="mono">
-                                                            Cabin{' '}
-                                                            {cabin(featured)} ·
-                                                            Up to{' '}
-                                                            {plural(
-                                                                featured.pax_capacity,
-                                                                'guest',
-                                                            )}
-                                                        </span>
-                                                        <h3>{featured.name}</h3>
-                                                    </div>
-                                                    <div className="price">
-                                                        {featured.rates[0] ? (
-                                                            <>
-                                                                {formatPeso(
-                                                                    featured
-                                                                        .rates[0]
-                                                                        .price,
-                                                                )}
-                                                                <small>
-                                                                    /{' '}
-                                                                    {
-                                                                        featured
-                                                                            .rates[0]
-                                                                            .unit
-                                                                    }
-                                                                </small>
-                                                            </>
-                                                        ) : (
-                                                            <small>
-                                                                Ask reception
-                                                            </small>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        {checkIn && (
-                                            <div
-                                                className="compass"
-                                                aria-hidden="true"
-                                            >
-                                                <svg
-                                                    viewBox="0 0 150 150"
-                                                    width="150"
-                                                    height="150"
-                                                >
-                                                    <g className="compass__ring">
-                                                        <defs>
-                                                            <path
-                                                                id="mm-circle"
-                                                                d="M75,75 m-62,0 a62,62 0 1,1 124,0 a62,62 0 1,1 -124,0"
-                                                            />
-                                                        </defs>
-                                                        <circle
-                                                            cx="75"
-                                                            cy="75"
-                                                            r="72"
-                                                            fill="#10233f"
-                                                            stroke="rgba(255,255,255,.14)"
-                                                        />
-                                                        <text>
-                                                            <textPath href="#mm-circle">
-                                                                {`CHECK-IN · ${checkIn} · CHECK-OUT · ${checkOut ?? ''} ·`}
-                                                            </textPath>
-                                                        </text>
-                                                    </g>
-                                                </svg>
-                                                <div className="compass__core">
-                                                    <span>
-                                                        {checkIn.split(' ')[0]}
-                                                        <small>
-                                                            {
-                                                                checkIn.split(
-                                                                    ' ',
-                                                                )[1]
-                                                            }{' '}
-                                                            IN
-                                                        </small>
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            )}
                         </div>
 
                         <div className="logbook">
@@ -1066,40 +943,6 @@ export default function Dashboard({
                                 </div>
                             </div>
                         </div>
-                    </div>
-
-                    <div className="waves" aria-hidden="true">
-                        <svg
-                            className="w1"
-                            viewBox="0 0 2880 150"
-                            preserveAspectRatio="none"
-                        >
-                            <path
-                                fill="#1f3a68"
-                                d="M0 70 C 240 20 480 120 720 70 S 1200 20 1440 70 S 1920 120 2160 70 S 2640 20 2880 70 V150 H0Z"
-                            />
-                        </svg>
-                        <svg
-                            className="w2"
-                            viewBox="0 0 2880 150"
-                            preserveAspectRatio="none"
-                        >
-                            <path
-                                fill="#3b5f99"
-                                fillOpacity=".45"
-                                d="M0 95 C 240 60 480 130 720 95 S 1200 60 1440 95 S 1920 130 2160 95 S 2640 60 2880 95 V150 H0Z"
-                            />
-                        </svg>
-                        <svg
-                            className="w3"
-                            viewBox="0 0 2880 150"
-                            preserveAspectRatio="none"
-                        >
-                            <path
-                                fill="#f5f0e6"
-                                d="M0 118 C 360 92 720 140 1080 116 S 1800 92 2160 116 S 2700 136 2880 118 V150 H0Z"
-                            />
-                        </svg>
                     </div>
                 </header>
 
@@ -1187,6 +1030,7 @@ export default function Dashboard({
                     )}
 
                     {/* ================= Locations ================= */}
+                    <Chapter index={1} />
                     {locations.length > 0 && (
                         <section className="s" id="locations">
                             <div className="s__head">
@@ -1348,6 +1192,7 @@ export default function Dashboard({
                     )}
 
                     {/* ================= Rooms ================= */}
+                    <Chapter index={2} />
                     <section className="s" id="rooms">
                         <div className="s__head">
                             <div>
@@ -1580,6 +1425,7 @@ export default function Dashboard({
                     </section>
 
                     {/* ================= Amenities ================= */}
+                    <Chapter index={3} />
                     {tiles.length > 0 && (
                         <section className="s" id="amenities">
                             <div className="s__head">

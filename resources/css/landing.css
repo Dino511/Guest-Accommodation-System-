@@ -1,7 +1,8 @@
 /*
- * The guest landing page ("harbor at night"). Tokens and motion follow the
- * Mindoro Marine design system: abyss for the hero and reservation band,
- * sand for everything you read, lantern gold as the single signal colour.
+ * The guest landing page: a first-person walk from the lobby to the balcony
+ * plays behind the page as it scrolls. Tokens follow the Mindoro Marine design
+ * system: abyss over the scenes and for the reservation band, sand sheets for
+ * everything you read, lantern gold as the single signal colour.
  * Everything is scoped under .mm so it cannot leak into the staff screens.
  */
 .mm {
@@ -34,9 +35,10 @@
     --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
     --ease-back: cubic-bezier(0.34, 1.56, 0.64, 1);
 
+    isolation: isolate;
     min-height: 100vh;
     overflow-x: clip;
-    background: var(--c-sand);
+    background: var(--c-abyss);
     color: var(--c-ink);
     font-family: var(--f-body);
     -webkit-font-smoothing: antialiased;
@@ -96,43 +98,9 @@
     /* ---------- hero ---------- */
     .hero {
         position: relative;
-        isolation: isolate;
-        overflow: hidden;
-        padding: 0 0 180px;
-        background: var(--c-abyss);
+        min-height: 100vh;
+        padding: 96px 0 120px;
         color: var(--c-od);
-    }
-
-    .hero__bg {
-        position: absolute;
-        inset: 0;
-        z-index: -1;
-        pointer-events: none;
-    }
-
-    .grain {
-        position: absolute;
-        inset: 0;
-        opacity: 0.07;
-        mix-blend-mode: overlay;
-    }
-
-    .glow {
-        position: absolute;
-        top: var(--gy, 30%);
-        left: var(--gx, 62%);
-        width: 720px;
-        height: 720px;
-        border-radius: 50%;
-        background: radial-gradient(
-            circle,
-            rgba(246, 184, 26, 0.2),
-            rgba(246, 184, 26, 0) 62%
-        );
-        transform: translate(-50%, -50%);
-        transition:
-            left 0.6s var(--ease),
-            top 0.6s var(--ease);
     }
 
     .beam {
@@ -152,49 +120,21 @@
         animation: mm-sweep 14s linear infinite;
     }
 
-    .contours {
-        position: absolute;
-        inset: -40px;
-        width: calc(100% + 80px);
-        height: calc(100% + 80px);
-    }
-
-    .contours path {
-        fill: none;
-        stroke: var(--c-foam);
-        stroke-opacity: 0.16;
-        stroke-width: 1;
-    }
-
-    .contours g {
-        transform-origin: center;
-        animation: mm-drift 26s ease-in-out infinite alternate;
-    }
-
-    .chartgrid {
-        position: absolute;
-        inset: 0;
-    }
-
-    .chartgrid text {
-        fill: var(--c-odm);
-        font-family: var(--f-mono);
-        font-size: 10px;
-        letter-spacing: 0.1em;
-        opacity: 0.6;
-    }
-
     .nav {
-        position: relative;
-        z-index: 5;
+        position: fixed;
+        top: 14px;
+        right: 0;
+        left: 0;
+        z-index: 40;
         display: flex;
         align-items: center;
         gap: 28px;
-        margin-top: 22px;
+        width: min(1180px, calc(100% - 64px));
+        margin: 0 auto;
         padding: 10px 10px 10px 14px;
         border: 1px solid var(--c-ld);
         border-radius: 999px;
-        background: rgba(16, 35, 63, 0.62);
+        background: rgba(16, 35, 63, 0.8);
         backdrop-filter: blur(14px);
         animation: mm-nav-in 1s var(--ease) both 0.1s;
     }
@@ -298,9 +238,7 @@
 
     .hero__grid {
         display: grid;
-        grid-template-columns: 1.15fr 0.85fr;
-        align-items: center;
-        gap: 40px;
+        grid-template-columns: minmax(0, 660px);
         padding-top: 76px;
     }
 
@@ -483,208 +421,16 @@
         background: var(--c-abyss);
     }
 
-    /* photo and ticket stack */
-    .stack {
-        position: relative;
-        height: 540px;
-        perspective: 1200px;
-    }
-
-    .stack__inner {
-        position: absolute;
-        inset: 0;
-        transform-style: preserve-3d;
-        transition: transform 0.6s var(--ease);
-    }
-
-    .card-back {
-        position: absolute;
-        top: 20px;
-        right: 0;
-        width: 330px;
-        height: 400px;
-        overflow: hidden;
-        border: 1px solid var(--c-ld);
-        border-radius: var(--r-lg);
-        box-shadow: var(--shadow-float);
-        transform: rotate(7deg) translateZ(-40px);
-        animation: mm-float-b 7s ease-in-out -2s infinite alternate;
-    }
-
-    .card-front {
-        position: absolute;
-        top: 70px;
-        left: 10px;
-        width: 360px;
-        overflow: hidden;
-        border-radius: var(--r-lg);
-        background: var(--c-shell);
-        box-shadow: var(--shadow-float);
-        color: var(--c-ink);
-        transform: rotate(-4deg) translateZ(30px);
-        animation: mm-float-a 6s ease-in-out infinite alternate;
-    }
-
-    .card-front__img {
-        position: relative;
-        height: 250px;
-        background: var(--c-h7);
-    }
-
-    .card-front__img img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-
-    .card-front__img::after {
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(
-            180deg,
-            rgba(10, 22, 40, 0) 50%,
-            rgba(10, 22, 40, 0.55)
-        );
-        content: '';
-    }
-
-    .card-front__tag {
-        position: absolute;
-        top: 14px;
-        left: 14px;
-        z-index: 2;
-        padding: 6px 10px;
-        border-radius: 999px;
-        background: rgba(10, 22, 40, 0.6);
-        backdrop-filter: blur(6px);
-        color: var(--c-od);
-        font-size: 10px;
-    }
-
-    .ticket {
-        position: relative;
-        padding: 18px 22px 20px;
-    }
-
-    .ticket::before {
-        position: absolute;
-        top: 0;
-        right: 22px;
-        left: 22px;
-        border-top: 2px dashed var(--c-line);
-        content: '';
-    }
-
-    .ticket__row {
-        display: flex;
-        align-items: flex-end;
-        justify-content: space-between;
-        gap: 12px;
-    }
-
-    .ticket h3 {
-        margin-top: 10px;
-        font-family: var(--f-display);
-        font-size: 24px;
-        font-weight: 700;
-        letter-spacing: -0.02em;
-    }
-
-    .ticket .mono {
-        color: var(--c-muted);
-        font-size: 10.5px;
-    }
-
-    .ticket .price {
-        font-family: var(--f-display);
-        font-size: 22px;
-        font-weight: 700;
-        letter-spacing: -0.02em;
-        text-align: right;
-        white-space: nowrap;
-    }
-
-    .ticket .price small {
-        display: block;
-        color: var(--c-muted);
-        font-family: var(--f-mono);
-        font-size: 10px;
-        font-weight: 400;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-    }
-
-    .notch {
-        position: absolute;
-        top: -10px;
-        width: 20px;
-        height: 20px;
-        border-radius: 50%;
-        background: var(--c-abyss);
-    }
-
-    .notch.l {
-        left: -10px;
-    }
-
-    .notch.r {
-        right: -10px;
-    }
-
-    .compass {
-        position: absolute;
-        right: 26px;
-        bottom: 6px;
-        width: 150px;
-        height: 150px;
-        transform: translateZ(60px);
-    }
-
-    .compass__ring {
-        transform-origin: 75px 75px;
-        animation: mm-spin 30s linear infinite;
-    }
-
-    .compass text {
-        fill: var(--c-od);
-        font-family: var(--f-mono);
-        font-size: 9.2px;
-        letter-spacing: 0.32em;
-    }
-
-    .compass__core {
-        position: absolute;
-        inset: 38px;
-        display: grid;
-        place-items: center;
-        border-radius: 50%;
-        background: var(--c-gold);
-        box-shadow: 0 10px 30px -8px rgba(246, 184, 26, 0.6);
-        color: var(--c-abyss);
-        font-family: var(--f-display);
-        font-size: 19px;
-        font-weight: 800;
-        line-height: 1;
-        letter-spacing: -0.02em;
-        text-align: center;
-    }
-
-    .compass__core small {
-        display: block;
-        margin-top: 3px;
-        font-family: var(--f-mono);
-        font-size: 8.5px;
-        font-weight: 500;
-        letter-spacing: 0.14em;
-    }
-
     /* logbook */
     .logbook {
         display: grid;
         grid-template-columns: repeat(4, 1fr) 1.3fr;
         margin-top: 72px;
-        border-top: 1px solid var(--c-ld);
-        border-bottom: 1px solid var(--c-ld);
+        padding: 0 24px;
+        border: 1px solid var(--c-ld);
+        border-radius: var(--r-md);
+        background: rgba(10, 22, 40, 0.62);
+        backdrop-filter: blur(12px);
     }
 
     .log {
@@ -743,37 +489,6 @@
     .log--ports .v span.on {
         color: var(--c-gold);
         opacity: 1;
-    }
-
-    .waves {
-        position: absolute;
-        right: 0;
-        bottom: -1px;
-        left: 0;
-        height: 150px;
-        pointer-events: none;
-    }
-
-    .waves svg {
-        position: absolute;
-        bottom: 0;
-        width: 200%;
-        max-width: none;
-        height: 100%;
-    }
-
-    .waves .w1 {
-        opacity: 0.35;
-        animation: mm-wave 18s linear infinite;
-    }
-
-    .waves .w2 {
-        opacity: 0.6;
-        animation: mm-wave 12s linear infinite reverse;
-    }
-
-    .waves .w3 {
-        animation: mm-wave 22s linear infinite;
     }
 
     /* ---------- marquee ---------- */
@@ -1939,15 +1654,222 @@
         font-size: 11px;
     }
 
+    /* ---------- the walk: scenes behind the whole page ---------- */
+    .scene {
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        overflow: hidden;
+        background: var(--c-abyss);
+    }
+
+    .scene img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        will-change: transform, opacity;
+    }
+
+    .scene img + img {
+        opacity: 0;
+    }
+
+    /* keep the lobby sign and the balcony chairs inside the crop */
+    .scene img:first-child {
+        object-position: 100% 50%;
+        transform-origin: 80% 50%;
+    }
+
+    .scene img:last-child {
+        object-position: 50% 62%;
+    }
+
+    .scene::after {
+        position: absolute;
+        inset: 0;
+        background:
+            linear-gradient(
+                90deg,
+                rgba(10, 22, 40, 0.8),
+                rgba(10, 22, 40, 0.34) 55%,
+                rgba(10, 22, 40, 0.12)
+            ),
+            linear-gradient(rgba(10, 22, 40, 0.5), rgba(10, 22, 40, 0) 32%);
+        content: '';
+    }
+
+    .scene__bar {
+        position: fixed;
+        inset: 0 0 auto;
+        z-index: 41;
+        height: 3px;
+    }
+
+    .scene__bar span {
+        display: block;
+        height: 100%;
+        background: var(--c-gold);
+        transform: scaleX(0);
+        transform-origin: left;
+    }
+
+    .rail {
+        position: fixed;
+        top: 50%;
+        right: 16px;
+        z-index: 39;
+        display: grid;
+        gap: 16px;
+        transform: translateY(-50%);
+    }
+
+    .rail a {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 10px;
+        color: #fff;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .rail a span {
+        padding: 5px 11px;
+        border-radius: 999px;
+        background: rgba(10, 22, 40, 0.85);
+        opacity: 0;
+        transform: translateX(6px);
+        transition:
+            opacity 0.3s var(--ease),
+            transform 0.3s var(--ease);
+        pointer-events: none;
+    }
+
+    .rail a:hover span,
+    .rail a:focus-visible span {
+        opacity: 1;
+        transform: none;
+    }
+
+    .rail i {
+        width: 11px;
+        height: 11px;
+        border: 2px solid #fff;
+        border-radius: 50%;
+        background: rgba(10, 22, 40, 0.5);
+        box-shadow: 0 0 0 3px rgba(10, 22, 40, 0.35);
+        transition: background 0.3s;
+    }
+
+    .rail a[aria-current] i {
+        border-color: var(--c-gold);
+        background: var(--c-gold);
+    }
+
+    .chapter {
+        display: grid;
+        align-content: end;
+        min-height: 100vh;
+        padding: 0 0 14vh 12px;
+        color: #fff;
+        scroll-margin-top: 0;
+        text-shadow: 0 2px 24px rgba(10, 22, 40, 0.6);
+    }
+
+    .chapter .mono {
+        color: var(--c-gold);
+    }
+
+    .chapter h2 {
+        margin-top: 14px;
+        font-family: var(--f-display);
+        font-size: clamp(48px, 9vw, 112px);
+        font-weight: 700;
+        line-height: 0.95;
+        letter-spacing: -0.04em;
+    }
+
+    .chapter p {
+        max-width: 460px;
+        margin-top: 20px;
+        color: var(--c-od);
+        font-size: 18px;
+        font-weight: 500;
+        line-height: 1.6;
+    }
+
+    /* what you read sits on sand sheets that ride over the scenes */
+    main.wrap {
+        width: min(1292px, calc(100% - 32px));
+    }
+
+    main > .s {
+        padding: 72px 56px;
+        border-radius: var(--r-lg);
+        background: var(--c-sand);
+        box-shadow: var(--shadow-float);
+        scroll-margin-top: 96px;
+    }
+
+    main > .s + .s,
+    main > .cta {
+        margin-top: 28px;
+    }
+
+    main > #stay {
+        margin-top: 96px;
+    }
+
+    .foot {
+        margin: 28px 0;
+        padding: 22px 32px;
+        border: 1px solid var(--c-ld);
+        border-radius: var(--r-md);
+        background: rgba(10, 22, 40, 0.72);
+        backdrop-filter: blur(12px);
+        color: var(--c-odm);
+    }
+
+    @media (max-width: 1340px) {
+        .rail {
+            display: none;
+        }
+    }
+
+    @media (max-width: 767px) {
+        /* a tall screen puts the text on top of the scene: dim it evenly */
+        .scene::after {
+            background: rgba(10, 22, 40, 0.66);
+        }
+
+        .hero {
+            padding: 88px 0 96px;
+        }
+
+        .nav {
+            width: calc(100% - 24px);
+        }
+
+        main.wrap {
+            width: calc(100% - 16px);
+        }
+
+        main > .s {
+            padding: 44px 20px;
+        }
+
+        .chapter {
+            padding-left: 8px;
+        }
+    }
+
     /* ---------- smaller screens ---------- */
     @media (max-width: 1023px) {
         .hero__grid {
             grid-template-columns: 1fr;
             padding-top: 56px;
-        }
-
-        .stack {
-            display: none;
         }
 
         .logbook {
@@ -2134,12 +2056,6 @@
     }
 }
 
-@keyframes mm-drift {
-    to {
-        transform: translate(-26px, 14px) rotate(-1.2deg);
-    }
-}
-
 @keyframes mm-nav-in {
     from {
         opacity: 0;
@@ -2166,18 +2082,6 @@
 @keyframes mm-draw {
     to {
         stroke-dashoffset: 0;
-    }
-}
-
-@keyframes mm-float-a {
-    to {
-        transform: rotate(-2.5deg) translateZ(30px) translateY(-12px);
-    }
-}
-
-@keyframes mm-float-b {
-    to {
-        transform: rotate(9deg) translateZ(-40px) translateY(10px);
     }
 }
 
